@@ -19,9 +19,9 @@ defmodule ReteTest do
       {~v<d>, :color, :white},
       {~v<s>, :on, :table},
       {~v<y>, ~v<a>, ~v<b>},
-      {~v<a>, :left_of, ~v<d>},
+      {~v<a>, :left_of, ~v<d>}
       #
-      {~v<anything>, :color, {:in, [:yellow, :black, :pink]}}
+      # {~v<anything>, :color, {:in, [:yellow, :black, :pink]}}
     ]
 
     network = Network.new(rules) |> IO.inspect(label: "with rules")
