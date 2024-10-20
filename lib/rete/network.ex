@@ -75,74 +75,60 @@ defmodule Rete.Network do
     ]
   end
 
-  # todo generate code to handle builtins
-  defp is_builtin_fn(item) do
-    match?({:in, _}, item) ||
-      match?({:>, _}, item) ||
-      match?({:<, _}, item) ||
-      match?({:>=, _}, item) ||
-      match?({:<=, _}, item)
+  # TODO generate code to handle builtins
+  # defp is_builtin_fn(item) do
+  #   match?({:in, _}, item) ||
+  #     match?({:>, _}, item) ||
+  #     match?({:<, _}, item) ||
+  #     match?({:>=, _}, item) ||
+  #     match?({:<=, _}, item)
+  # end
+
+  defp adapt_memories_for_rule(map, rule) do
+    possible_keys = generate_lookup_permutations_for_rule(rule)
+    put_or_update_lazy(map, possible_keys, AlphaMemory.new())
   end
 
   defp generate_lookup_permutations_for_rule({id, attribute, value}) do
-    if Enum.any?([id, attribute, value], &is_builtin_fn/1) do
-      [
-        case id do
-          {:variable, _} -> :*
-          _ -> id
-        end,
-        case attribute do
-          {:variable, _} -> :*
-          _ -> attribute
-        end,
-        case value do
-          {:variable, _} -> :*
-          _ -> value
-        end
-      ]
-    else
-      [
-        case id do
-          {:variable, _} -> :*
-          _ -> id
-        end,
-        case attribute do
-          {:variable, _} -> :*
-          _ -> attribute
-        end,
-        case value do
-          {:variable, _} -> :*
-          _ -> value
-        end
-      ]
-    end
+    # TODO
+    # if Enum.any?([id, attribute, value], &is_builtin_fn/1) do
+    #   [
+    #     case id do
+    #       {:variable, _} -> :*
+    #       _ -> id
+    #     end,
+    #     case attribute do
+    #       {:variable, _} -> :*
+    #       _ -> attribute
+    #     end,
+    #     case value do
+    #       {:variable, _} -> :*
+    #       _ -> value
+    #     end
+    #   ]
+    # else
+    [
+      case id do
+        {:variable, _} -> :*
+        _ -> id
+      end,
+      case attribute do
+        {:variable, _} -> :*
+        _ -> attribute
+      end,
+      case value do
+        {:variable, _} -> :*
+        _ -> value
+      end
+    ]
+
+    # end
   end
 
   defp put_or_update_lazy(map, keys, terminal_value) do
     put_or_update_lazy_loop(map, keys, terminal_value)
   end
 
-  # defp put_or_update_lazy_loop(map, [final_key], terminal_value) do
-  #   Map.put(map, final_key, terminal_value)
-  # end
-
-  # defp put_or_update_lazy_loop(map, [key | keys], terminal_value) do
-  #   # case Map.fetch(map, key) do
-  #   #   {:ok, m} ->
-  #   #     Map.update!(map, key, fn v ->
-  #   #       put_or_update_lazy_loop(v, keys, terminal_value)
-  #   #     end)
-
-  #   #   :error ->
-  #   #     %{key => put_or_update_lazy_loop(%{}, keys, terminal_value)}
-  #   # end
-  #   if Map.has_key?(map, key) do
-  #     put_or_update_lazy_loop(Map.fetch!(map, key), keys, terminal_value)
-  #   else
-  #     map = Map.put(map, key, %{})
-  #     put_or_update_lazy_loop(Map.fetch!(map, key), keys, terminal_value)
-  #   end
-  # end
   defp put_or_update_lazy_loop(map, [], _terminal_value) do
     map
   end
@@ -161,11 +147,5 @@ defmodule Rete.Network do
       :error ->
         Map.put(map, key, put_or_update_lazy_loop(%{}, keys, terminal_value))
     end
-  end
-
-  defp adapt_memories_for_rule(map, rule) do
-    Kernel.put_in(%{}, [:a], 1)
-    possible_keys = generate_lookup_permutations_for_rule(rule)
-    put_or_update_lazy(map, possible_keys, AlphaMemory.new())
   end
 end
