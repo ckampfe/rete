@@ -3,29 +3,40 @@ defmodule ReteTest do
   doctest Rete
   import Rete.Sigils
   alias Rete.Network2
+  require Rete.Syntax
 
   test "greets the world" do
     assert Rete.hello() == :world
   end
 
   test "alpha" do
-    rules = [
-      {~v<x>, :on, ~v<y>},
-      {~v<y>, :left_of, ~v<z>},
-      {~v<z>, :color, :red},
-      {~v<a>, :color, :maize},
-      {~v<b>, :color, :blue},
-      {~v<c>, :color, :green},
-      {~v<d>, :color, :white},
-      {~v<s>, :on, :table},
-      {~v<y>, ~v<a>, ~v<b>},
-      {~v<a>, :left_of, ~v<d>},
-      {~v<g>, :color, fn color -> color in [:pink, :yellow, :black] end},
-      {~v<h>, :size, fn size -> size > 30 end},
-      {~v<e>, :size, 29}
-      #
-      # {~v<anything>, :color, {:in, [:yellow, :black, :pink]}}
-    ]
+    rules =
+      [
+        {~v<x>, :on, ~v<y>},
+        {~v<y>, :left_of, ~v<z>},
+        {~v<z>, :color, :red},
+        {~v<a>, :color, :maize},
+        {~v<b>, :color, :blue},
+        {~v<c>, :color, :green},
+        {~v<d>, :color, :white},
+        {~v<s>, :on, :table},
+        {~v<y>, ~v<a>, ~v<b>},
+        {~v<a>, :left_of, ~v<d>},
+        {~v<g>, :color, fn color -> color in [:pink, :yellow, :black] end},
+        {~v<h>, :size, fn size -> size > 30 end},
+        {~v<e>, :size, 29}
+        #
+        # {~v<anything>, :color, {:in, [:yellow, :black, :pink]}}
+      ]
+      |> Enum.concat(
+        Rete.Syntax.defrule :porsche_exclusions,
+          make: "porsche",
+          model: fn model ->
+            model in ["cayenne", "911 gt3rs", "panamera"]
+          end do
+          :exclude
+        end
+      )
 
     network = Network2.new(rules) |> IO.inspect(label: "with rules")
 
@@ -43,9 +54,20 @@ defmodule ReteTest do
       {~v<B4>, :color, :pink},
       {~v<B8>, :color, :yellow},
       {~v<B8>, :size, 10},
-      {~v<B8>, :size, 70}
+      {~v<B8>, :size, 70},
+      {~v<FOO>, :make, "porsche"},
+      {~v<FOO>, :model, "cobalt"},
+      {~v<FOO>, :model, "panamera"}
     ]
 
     Network2.run(network, facts) |> IO.inspect(label: "after adding facts")
+  end
+
+  test "syntax" do
+    Rete.Syntax.defrule :porsche_exclusions,
+      make: "porsche",
+      model: ["cayenne", "911 gt3rs", "panamera"] do
+      :exclude
+    end
   end
 end

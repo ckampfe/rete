@@ -5,35 +5,21 @@ end
 defmodule Rete.Network2 do
   alias Rete.AlphaNode
 
-  defstruct [:top_node]
+  defstruct [:hash_network]
 
   def new(rules) do
-    %__MODULE__{top_node: build_network(rules)}
+    %__MODULE__{hash_network: build_network(rules)}
   end
 
   def run(network, facts) do
     fact_lookups = Enum.map(facts, &to_lookup_path/1)
 
-    %{
-      top_node: %{
-        :* => %{
-          :color => %{
-            {:internal, :fn} => %{
-              3_482_304_982_340 => %Rete.AlphaNode{test: nil, memory: []}
-            }
-          }
-        }
-      }
-    }
-
-    alpha_memories =
+    hash_network =
       facts
       |> Enum.zip(fact_lookups)
-      |> Enum.reduce(network.top_node, fn {fact, lookup}, memories ->
-        # this works for constants only:
-        #
+      |> Enum.reduce(network.hash_network, fn {fact, lookup}, memories ->
         if Kernel.get_in(memories, lookup) do
-          IO.inspect(Kernel.get_in(memories, lookup), label: "GET IN")
+          # IO.inspect(Kernel.get_in(memories, lookup), label: "GET IN")
 
           Kernel.update_in(memories, lookup, fn memory ->
             %{memory | memory: [fact | memory.memory]}
@@ -43,7 +29,7 @@ defmodule Rete.Network2 do
         end
       end)
 
-    # %{network | alpha_memories: alpha_memories}
+    %__MODULE__{hash_network: hash_network}
   end
 
   defp build_network(rules) do
@@ -112,12 +98,13 @@ defmodule Rete.Network2 do
                     nil
                 end
               end)
-              |> IO.inspect(label: "VVVVVVVVVVVVVVV")
 
             case value do
               {[{:internal, :fn}, node_id], node} ->
+                internal_fn_nodes = Map.get(data, {:internal, :fn})
+
                 case next.(node) do
-                  {get, update} -> {get, Kernel.put_in(data, [{:internal, :fn}, node_id], update)}
+                  {get, update} -> {get, Map.put(internal_fn_nodes, node_id, update)}
                   :pop -> {value, Map.delete(data, field)}
                 end
 
@@ -157,7 +144,7 @@ defmodule Rete.Network2 do
     put_or_update_lazy_loop(map, rule, keys, terminal_value)
   end
 
-  defp put_or_update_lazy_loop(map, rule, [], _terminal_value) do
+  defp put_or_update_lazy_loop(map, _rule, [], _terminal_value) do
     map
   end
 
